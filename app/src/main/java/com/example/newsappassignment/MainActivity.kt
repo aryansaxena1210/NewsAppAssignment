@@ -1,72 +1,53 @@
 package com.example.newsappassignment
 
 import android.os.Bundle
-import android.util.Log
+
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.activity.viewModels
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.newsappassignment.data.models.Article
-import com.example.newsappassignment.data.network.Retrofit.api
-import com.example.newsappassignment.ui.theme.NewsAppAssignmentTheme
-import com.example.newsappassignment.utils.Constant
+import com.example.newsappassignment.viewmodel.NewsViewModel
+import org.orbitmvi.orbit.compose.collectSideEffect
 
 
 class MainActivity : ComponentActivity() {
+    private val viewModel : NewsViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
         setContent {
-            NewsAppAssignmentTheme  {
 
-                val articles = remember { mutableStateListOf<Article>() }
+            val navController = rememberNavController()
+            NavHost(navController = navController, startDestination = "articles") {
 
-                LaunchedEffect(Unit) {
-                    setArticles(articles)
+                composable("articles") {
+                    ListViewScreen(viewModel)
                 }
 
-                val navController = rememberNavController()
+                composable("articles/{articleTitle}"){ navBackStackEntry ->
+                    val articleTitle = navBackStackEntry.arguments?.getString("articleTitle")
+                    DetailScreenView(viewModel, articleTitle?: "")
 
-                NavHost(navController = navController, startDestination = "listScreen") {
-                    composable("listScreen") {
-                        ListScreenView(navController, articles)
-                    }
-
-                    composable("detailScreen/{articleUrl}") { backStackEntry ->
-                        val articleUrl = backStackEntry.arguments?.getString("articleUrl")
-                        DetailScreenView(articleUrl, articles)
-                    }
                 }
             }
+
+
+            val currentContext = LocalContext.current
+            viewModel.collectSideEffect { viewModel.handleSideEffect(
+                it,
+                currentContext,
+                navController
+            )}
+
         }
+
+
+
     }
 
-    private suspend fun setArticles(articles: SnapshotStateList<Article>) {
-        try {
-            val response = api.getTopStories(Constant.APIKEY)
-            if (response.isSuccessful) {
-                val fetchedArticles = response.body()?.results
-                Log.d("MainActivity", "Articles: $articles")
-                fetchedArticles?.let {
-                    // Update the state with the fetched articles if not null
-                    articles.clear()
-                    articles.addAll(it)
-                }
-            } else {
-                Log.e(
-                    "MainActivity",
-                    "Error: ${response.code()} - ${response.message()}"
-                )
-            }
-        } catch (e: Exception) {
-            Log.e("MainActivity", "Exception: ${e.message}")
-        }
-    }
+
 }

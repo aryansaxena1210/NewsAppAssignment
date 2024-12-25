@@ -4,6 +4,7 @@ data class TopStoriesResponse(
     val results: List<Article>
 )
 
+
 data class Article(
     val title: String,
     val byline: String,

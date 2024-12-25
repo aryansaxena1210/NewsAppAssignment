@@ -65,4 +65,13 @@ dependencies {
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
 
     implementation ("com.squareup.okhttp3:logging-interceptor:4.9.0")
+
+    implementation("org.orbit-mvi:orbit-core:9.0.0")
+    implementation("org.orbit-mvi:orbit-viewmodel:9.0.0")
+
+    implementation("org.orbit-mvi:orbit-compose:9.0.0")
+    testImplementation("org.orbit-mvi:orbit-test:9.0.0")
+
+
+
 }
